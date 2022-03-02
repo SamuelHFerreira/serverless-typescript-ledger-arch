@@ -1,11 +1,7 @@
-exports.handler = async function(flavour:any) {
-    console.log("Requested Pizza :", JSON.stringify(flavour, undefined, 2));
+exports.handler = async function(booleanOrder:any) {
+    console.log("Requested Lambda Handler :", JSON.stringify(booleanOrder, undefined, 2));
     
-    let containsPineapple = false;
+    let inversedInput = booleanOrder!;
     
-    if(flavour == 'pineapple' || flavour =='hawaiian'){
-        containsPineapple = true;
-    }
-
-    return {'containsPineapple': containsPineapple}
+    return {'containsFailure': inversedInput}
 }

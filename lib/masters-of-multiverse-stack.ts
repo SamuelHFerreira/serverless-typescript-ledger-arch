@@ -4,7 +4,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
-import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+// import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class MastersOfMultiverseStack extends Stack {
 
@@ -22,7 +22,7 @@ export class MastersOfMultiverseStack extends Stack {
     // Step functions are built up of steps, we need to define our first step
     const entryPointJob = new tasks.LambdaInvoke(this, "Entry Point Job", {
       lambdaFunction: entryFlowLambda,
-      inputPath: '$.flavour',
+      inputPath: '$.booleanOrder',
       resultPath: '$.entryPointAnalysisResult',
       payloadResponseOnly: true
     })
@@ -43,7 +43,7 @@ export class MastersOfMultiverseStack extends Stack {
     .start(entryPointJob)
     .next(new sfn.Choice(this, 'With Choice?') // Logical choice added to flow
         // Look at the "status" field
-        .when(sfn.Condition.booleanEquals('$.pineappleAnalysis.containsPineapple', true), failStep) // Fail First
+        .when(sfn.Condition.booleanEquals('$.entryPointAnalysisResult.containsFailure', true), failStep) // Fail First
         .otherwise(successStep));
 
     let stateMachine = new sfn.StateMachine(this, 'StateMachine', {
@@ -52,6 +52,7 @@ export class MastersOfMultiverseStack extends Stack {
       tracingEnabled: true,
       stateMachineType: sfn.StateMachineType.EXPRESS
     });
+    
 
     //======  Endpoint Action is defined!!
 
@@ -59,5 +60,13 @@ export class MastersOfMultiverseStack extends Stack {
       deploy: true,
       stateMachine: stateMachine,
     });
+
+
+
+    // const v1 = api.root.addResource('v1');
+    // const echo = v1.addResource('user');
+    // const echoMethod = echo.addMethod('GET', stateMachine, { apiKeyRequired: true });
+
+    
   }
 }
