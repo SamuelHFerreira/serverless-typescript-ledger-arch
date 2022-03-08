@@ -8,6 +8,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "cdk": "cdk",
     "local": "cdklocal"
   },
@@ -24,6 +26,7 @@
   "dependencies": {
     "aws-cdk-lib": "2.13.0",
     "constructs": "^10.0.0",
+    "prettier": "^2.4.1",
     "source-map-support": "^0.5.16"
   }
 }
