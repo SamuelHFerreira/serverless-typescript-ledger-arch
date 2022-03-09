@@ -1,4 +1,4 @@
-const { Contract } = require('fabric-contract-api');
+import { Contract, Context } from 'fabric-contract-api';
 
 const balancePrefix = 'balance';
 const nftPrefix = 'nft';
@@ -7,9 +7,21 @@ const approvalPrefix = 'approval';
 const nameKey = 'name';
 const symbolKey = 'symbol';
 
+export type NFT = {
+    owner: string;
+    readonly tokenId: string;
+    readonly tokenURI: string;
+    approved?: string;
+}
+
 class TokenMOUContract extends Contract {
 
-    async BalanceOf(ctx, owner) {
+    constructor(name?: string) {
+        super(name);
+    
+    }
+
+    async BalanceOf(ctx: Context, owner: string): Promise<number> {
         const iterator = await ctx.stub.getStateByPartialCompositeKey(balancePrefix, [owner]);
 
         // Count the number of returned composite keys
@@ -22,7 +34,7 @@ class TokenMOUContract extends Contract {
         return balance;
     }
 
-    async OwnerOf(ctx, tokenId) {
+    async OwnerOf(ctx: Context, tokenId: string): Promise<string> {
         const nft = await this._readNFT(ctx, tokenId);
         const owner = nft.owner;
         if (!owner) {
@@ -32,7 +44,7 @@ class TokenMOUContract extends Contract {
         return owner;
     }
 
-    async TransferFrom(ctx, from, to, tokenId) {
+    async TransferFrom(ctx: Context, from: string, to: string, tokenId: string): Promise<boolean> {
         const sender = ctx.clientIdentity.getID();
 
         const nft = await this._readNFT(ctx, tokenId);
@@ -72,7 +84,7 @@ class TokenMOUContract extends Contract {
         return true;
     }
 
-    async Approve(ctx, approved, tokenId) {
+    async Approve(ctx: Context, approved: string, tokenId: string): Promise<boolean> {
         const sender = ctx.clientIdentity.getID();
 
         const nft = await this._readNFT(ctx, tokenId);
@@ -95,7 +107,7 @@ class TokenMOUContract extends Contract {
         return true;
     }
 
-    async SetApprovalForAll(ctx, operator, approved) {
+    async SetApprovalForAll(ctx: Context, operator: string, approved: string): Promise<boolean> {
         const sender = ctx.clientIdentity.getID();
 
         const approval = { owner: sender, operator: operator, approved: approved };
@@ -108,12 +120,12 @@ class TokenMOUContract extends Contract {
         return true;
     }
 
-    async GetApproved(ctx, tokenId) {
+    async GetApproved(ctx: Context, tokenId: string): Promise<string> {
         const nft = await this._readNFT(ctx, tokenId);
-        return nft.approved;
+        return nft.approved!;
     }
 
-    async IsApprovedForAll(ctx, owner, operator) {
+    async IsApprovedForAll(ctx: Context, owner: string, operator: string): Promise<boolean> {
         const approvalKey = ctx.stub.createCompositeKey(approvalPrefix, [owner, operator]);
         const approvalBytes = await ctx.stub.getState(approvalKey);
         let approved;
@@ -127,22 +139,22 @@ class TokenMOUContract extends Contract {
         return approved;
     }
 
-    async Name(ctx) {
+    async Name(ctx: Context): Promise<string> {
         const nameAsBytes = await ctx.stub.getState(nameKey);
         return nameAsBytes.toString();
     }
 
-    async Symbol(ctx) {
+    async Symbol(ctx: Context): Promise<string> {
         const symbolAsBytes = await ctx.stub.getState(symbolKey);
         return symbolAsBytes.toString();
     }
 
-    async TokenURI(ctx, tokenId) {
+    async TokenURI(ctx: Context, tokenId: string): Promise<string> {
         const nft = await this._readNFT(ctx, tokenId);
         return nft.tokenURI;
     }
 
-    async TotalSupply(ctx) {
+    async TotalSupply(ctx: Context): Promise<number> {
         const iterator = await ctx.stub.getStateByPartialCompositeKey(nftPrefix, []);
 
         let totalSupply = 0;
@@ -154,9 +166,7 @@ class TokenMOUContract extends Contract {
         return totalSupply;
     }
 
-    async SetOption(ctx, name, symbol) {
-
-
+    async SetOption(ctx: Context, name: string, symbol: string): Promise<boolean> {
         const clientMSPID = ctx.clientIdentity.getMSPID();
         if (clientMSPID !== 'Org1MSP') {
             throw new Error('client is not authorized to set the name and symbol of the token');
@@ -168,7 +178,7 @@ class TokenMOUContract extends Contract {
     }
 
 
-    async MintWithTokenURI(ctx, tokenId, tokenURI) {
+    async MintWithTokenURI(ctx: Context, tokenId: string, tokenURI: string): Promise<NFT> {
 
         const clientMSPID = ctx.clientIdentity.getMSPID();
         if (clientMSPID !== 'Org1MSP') {
@@ -189,8 +199,8 @@ class TokenMOUContract extends Contract {
         if (isNaN(tokenIdInt)) {
             throw new Error(`The tokenId ${tokenId} is invalid. tokenId must be an integer`);
         }
-        const nft = {
-            tokenId: tokenIdInt,
+        const nft: NFT = {
+            tokenId: tokenId,
             owner: minter,
             tokenURI: tokenURI
         };
@@ -207,7 +217,7 @@ class TokenMOUContract extends Contract {
         return nft;
     }
 
-    async Burn(ctx, tokenId) {
+    async Burn(ctx: Context, tokenId: string): Promise<boolean> {
         const owner = ctx.clientIdentity.getID();
 
         // Check if a caller is the owner of the non-fungible token
@@ -232,7 +242,7 @@ class TokenMOUContract extends Contract {
         return true;
     }
 
-    async _readNFT(ctx, tokenId) {
+    async _readNFT(ctx: Context, tokenId: string): Promise<NFT> {
         const nftKey = ctx.stub.createCompositeKey(nftPrefix, [tokenId]);
         const nftBytes = await ctx.stub.getState(nftKey);
         if (!nftBytes || nftBytes.length === 0) {
@@ -242,19 +252,19 @@ class TokenMOUContract extends Contract {
         return nft;
     }
 
-    async _nftExists(ctx, tokenId) {
+    async _nftExists(ctx: Context, tokenId: string): Promise<boolean> {
         const nftKey = ctx.stub.createCompositeKey(nftPrefix, [tokenId]);
         const nftBytes = await ctx.stub.getState(nftKey);
         return nftBytes && nftBytes.length > 0;
     }
 
 
-    async ClientAccountBalance(ctx) {
+    async ClientAccountBalance(ctx: Context): Promise<number> {
         const clientAccountID = ctx.clientIdentity.getID();
         return this.BalanceOf(ctx, clientAccountID);
     }
 
-    async ClientAccountID(ctx) {
+    async ClientAccountID(ctx: Context): Promise<string> {
         // Get ID of submitting client identity
         const clientAccountID = ctx.clientIdentity.getID();
         return clientAccountID;
