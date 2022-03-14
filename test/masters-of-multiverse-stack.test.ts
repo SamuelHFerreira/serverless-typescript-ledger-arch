@@ -1,18 +1,15 @@
-import * as cdk from "aws-cdk-lib";
-import { Template } from "aws-cdk-lib/assertions";
-import * as MastersOfMultiverse from "../lib/masters-of-multiverse-stack";
+import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import * as MastersOfMultiverse from '../lib/masters-of-multiverse-stack';
 
-test("Stack Tests", () => {
+test('Stack Tests', () => {
   const app = new cdk.App();
 
-  const stack = new MastersOfMultiverse.MastersOfMultiverseStack(
-    app,
-    "MyTestStack"
-  );
+  const stack = new MastersOfMultiverse.MastersOfMultiverseStack(app, 'MyTestStack');
 
   const template = Template.fromStack(stack);
 
-  template.hasResourceProperties("AWS::StepFunctions::StateMachine", {
-    StateMachineType: "EXPRESS",
+  template.hasResourceProperties('AWS::StepFunctions::StateMachine', {
+    StateMachineType: 'EXPRESS',
   });
 });

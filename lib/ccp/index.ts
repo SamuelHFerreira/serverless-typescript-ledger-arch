@@ -26,7 +26,7 @@ export interface Peer {
 }
 
 export interface Organizations {
-  "Org${ORG}": OrgOrg;
+  'Org${ORG}': OrgOrg;
 }
 
 export interface OrgOrg {
@@ -36,7 +36,7 @@ export interface OrgOrg {
 }
 
 export interface Peers {
-  "peer0.org${ORG}.example.com": Peer0OrgOrgExampleCom;
+  'peer0.org${ORG}.example.com': Peer0OrgOrgExampleCom;
 }
 
 export interface Peer0OrgOrgExampleCom {
@@ -50,7 +50,7 @@ export interface TlsCacerts {
 }
 
 export interface GrpcOptions {
-  "ssl-target-name-override": string;
+  'ssl-target-name-override': string;
   hostnameOverride: string;
 }
 
