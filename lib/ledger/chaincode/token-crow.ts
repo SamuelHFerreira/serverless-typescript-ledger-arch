@@ -16,7 +16,7 @@ export type NFT = {
   approved?: string;
 };
 
-export class TokenMMUContract extends Contract {
+export class TokenCrowContract extends Contract {
   constructor(name?: string) {
     super(name);
   }
@@ -275,4 +275,4 @@ export class TokenMMUContract extends Contract {
   }
 }
 
-module.exports = TokenMMUContract;
+module.exports = TokenCrowContract;
