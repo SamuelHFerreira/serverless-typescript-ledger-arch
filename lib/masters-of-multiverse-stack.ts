@@ -78,12 +78,12 @@ export class MastersOfMultiverseStack extends Stack {
 
     let v1 = api.root.addResource('v1');
     let userResource = v1.addResource('user');
-    userResource.addMethod('POST', apigateway.StepFunctionsIntegration.startExecution(stateMachine), {
-      apiKeyRequired: false,
-      requestModels: {
-        'application/json': userModel,
-      },
-    });
+    // userResource.addMethod('POST', apigateway.StepFunctionsIntegration.startExecution(stateMachine), {
+    //   apiKeyRequired: false,
+    //   requestModels: {
+    //     'application/json': userModel,
+    //   },
+    // });
 
     const handler: lambda.Function = new lambda.Function(this, 'GetUserLambdaHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
@@ -93,5 +93,14 @@ export class MastersOfMultiverseStack extends Stack {
     });
 
     userResource.addMethod('GET', new apigateway.LambdaIntegration(handler));
+
+    const createUserHandler: lambda.Function = new lambda.Function(this, 'CreateUserLambdaHandler', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset(sourceDir),
+      handler: 'createUser.handler',
+      timeout: Duration.seconds(10),
+    });
+
+    userResource.addMethod('POST', new apigateway.LambdaIntegration(createUserHandler));
   }
 }
