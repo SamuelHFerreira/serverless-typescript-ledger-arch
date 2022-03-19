@@ -3,6 +3,7 @@ import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Duration } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 
 class StateMachineGenerator {
   readonly context: Construct;
@@ -12,7 +13,16 @@ class StateMachineGenerator {
     this.context = context;
   }
 
-  public createStateMachine() {
+  public createGatewayForStateMachine(props: apigateway.StepFunctionsRestApiProps) {
+    let api = new apigateway.StepFunctionsRestApi(this.context, 'id' , props);
+    let v1 = api.root.addResource('v1');
+    let userResource = v1.addResource('user');
+    userResource.addMethod('POST', apigateway.StepFunctionsIntegration.startExecution(this.createStateMachine()), {
+      apiKeyRequired: false,
+    });
+  }
+
+  public createStateMachine(): sfn.StateMachine {
     // Flow that may be repeated by each sync job* entrypoint
     let entryFlowLambda = new lambda.Function(this.context, 'entryFLowLambdaHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
@@ -53,5 +63,7 @@ class StateMachineGenerator {
       tracingEnabled: true,
       stateMachineType: sfn.StateMachineType.EXPRESS,
     });
+
+    return stateMachine;
   }
 }
