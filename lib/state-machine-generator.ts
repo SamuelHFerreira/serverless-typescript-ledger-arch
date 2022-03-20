@@ -14,7 +14,7 @@ class StateMachineGenerator {
   }
 
   public createGatewayForStateMachine(props: apigateway.StepFunctionsRestApiProps) {
-    let api = new apigateway.StepFunctionsRestApi(this.context, 'id' , props);
+    let api = new apigateway.StepFunctionsRestApi(this.context, 'id', props);
     let v1 = api.root.addResource('v1');
     let userResource = v1.addResource('user');
     userResource.addMethod('POST', apigateway.StepFunctionsIntegration.startExecution(this.createStateMachine()), {

@@ -1,11 +1,22 @@
 import { Stack, StackProps, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as path from 'path';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { OpenAPIV3 } from 'openapi-types';
 import * as YAML from 'yaml';
 import * as fs from 'fs';
+
+export type IntegrationAddons = {
+  [xHeaderId: string]: IntegrationAddon & unknown;
+};
+
+export type IntegrationAddon = {
+  uri: string;
+  type: string;
+  httpMethod: string;
+  connectionType: string;
+};
 
 export class MastersOfMultiverseStack extends Stack {
   public readonly openApiSpec: {
@@ -42,6 +53,7 @@ export class MastersOfMultiverseStack extends Stack {
       handler: 'operations/getUser.handler',
       timeout: Duration.seconds(10),
     });
+    getUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
     const createUserHandler: lambda.Function = new lambda.Function(this, 'CreateUserLambdaHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
@@ -49,11 +61,12 @@ export class MastersOfMultiverseStack extends Stack {
       handler: 'operations/postUser.handler',
       timeout: Duration.seconds(10),
     });
-    // TODO assign automatically by name pattern.
-    this.customizeSpecToLambdaHandling(getUserHandler, 'user', OpenAPIV3.HttpMethods.GET);
-    this.customizeSpecToLambdaHandling(createUserHandler, 'user', OpenAPIV3.HttpMethods.POST);
+    createUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
-    
+    // TODO assign automatically by name pattern.
+    this.customizeSpecToLambdaHandling(getUserHandler, '/users/{userId}', OpenAPIV3.HttpMethods.GET);
+    this.customizeSpecToLambdaHandling(createUserHandler, '/user', OpenAPIV3.HttpMethods.POST);
+
     const apiDefinition = apigateway.ApiDefinition.fromInline(this.openApiSpec);
 
     const specRestApiProps = {
@@ -64,8 +77,6 @@ export class MastersOfMultiverseStack extends Stack {
     };
 
     const api = new apigateway.SpecRestApi(this, 'MastersOfMultiverseAPI', specRestApiProps);
-    fs.writeFileSync('spec/testSpec.yaml', YAML.stringify(this.openApiSpec));
-    
   }
 
   private customizeSpecToLambdaHandling(lambda: lambda.Function, pathToApply: string, methodToApply: string) {
@@ -86,17 +97,20 @@ export class MastersOfMultiverseStack extends Stack {
     lambdaIntegrationUri: string
   ) {
     return Object.keys(pathSpec)
-      .filter((method) => (<any>Object).values(OpenAPIV3.HttpMethods).includes(method))
+      .filter((method) => (<any>Object).values(OpenAPIV3.HttpMethods).includes(method) && method == operationToApply)
       .map((method) => {
-        if (method == operationToApply) {
-          pathSpec['x-amazon-apigateway-integration'] = {
-            uri: lambdaIntegrationUri,
-            type: 'aws_proxy',
-            httpMethod: 'POST',
-            connectionType: 'INTERNET',
-          };
-        }
+        let operation = pathSpec[method] as { [attr: string]: unknown };
+        this.addIntegrationToOperation( operation, lambdaIntegrationUri);
       });
+  }
+
+  private addIntegrationToOperation(operation: { [attr: string]: unknown }, lambdaIntegrationUri: string) {
+    operation['x-amazon-apigateway-integration'] = {
+      uri: lambdaIntegrationUri,
+      type: 'aws_proxy',
+      httpMethod: 'POST',
+      connectionType: 'INTERNET',
+    };
   }
 
   private getIntegrationUri(functionArn?: string): string {
