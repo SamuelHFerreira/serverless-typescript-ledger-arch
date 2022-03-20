@@ -36,34 +36,12 @@ export class MastersOfMultiverseStack extends Stack {
     const openApiYaml = fs.readFileSync('specs/Masters-Of-Multiverse.yaml', 'utf-8');
     this.openApiSpec = YAML.parse(openApiYaml);
 
-    const apiDefinition = apigateway.ApiDefinition.fromInline(this.openApiSpec);
-
-    const specRestApiProps = {
-      apiDefinition,
-      deployOptions: {
-        tracingEnabled: true,
-      },
-    };
-
-    const api = new apigateway.SpecRestApi(this, 'MastersOfMultiverseAPI', specRestApiProps);
-
-    // let v1 = api.root.addResource('v1');
-    // let userResource = v1.addResource('user');
-    // userResource.addMethod('POST', apigateway.StepFunctionsIntegration.startExecution(stateMachine), {
-    //   apiKeyRequired: false,
-    //   requestModels: {
-    //     'application/json': userModel,
-    //   },
-    // });
-
     const getUserHandler: lambda.Function = new lambda.Function(this, 'GetUserLambdaHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset(sourceDir),
       handler: 'operations/getUser.handler',
       timeout: Duration.seconds(10),
     });
-
-    // userResource.addMethod('GET', new apigateway.LambdaIntegration(handler));
 
     const createUserHandler: lambda.Function = new lambda.Function(this, 'CreateUserLambdaHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
@@ -75,7 +53,19 @@ export class MastersOfMultiverseStack extends Stack {
     this.customizeSpecToLambdaHandling(getUserHandler, 'user', OpenAPIV3.HttpMethods.GET);
     this.customizeSpecToLambdaHandling(createUserHandler, 'user', OpenAPIV3.HttpMethods.POST);
 
-    // userResource.addMethod('POST', new apigateway.LambdaIntegration(createUserHandler));
+    
+    const apiDefinition = apigateway.ApiDefinition.fromInline(this.openApiSpec);
+
+    const specRestApiProps = {
+      apiDefinition,
+      deployOptions: {
+        tracingEnabled: true,
+      },
+    };
+
+    const api = new apigateway.SpecRestApi(this, 'MastersOfMultiverseAPI', specRestApiProps);
+    fs.writeFileSync('spec/testSpec.yaml', YAML.stringify(this.openApiSpec));
+    
   }
 
   private customizeSpecToLambdaHandling(lambda: lambda.Function, pathToApply: string, methodToApply: string) {

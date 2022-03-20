@@ -187,4 +187,3 @@ components:
         - lastName
         - email
         - emailVerified
-x-extension-1: null

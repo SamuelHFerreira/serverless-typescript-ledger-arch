@@ -9,7 +9,11 @@ test('Stack Tests', () => {
 
   const template = Template.fromStack(stack);
 
-  template.hasResourceProperties('AWS::StepFunctions::StateMachine', {
-    StateMachineType: 'EXPRESS',
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Handler: 'operations/postUser.handler',
+  });
+
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Handler: 'operations/getUser.handler',
   });
 });
