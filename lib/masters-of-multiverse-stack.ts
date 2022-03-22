@@ -90,8 +90,7 @@ export class MastersOfMultiverseStack extends Stack {
     const crowBlockChain = new CrowManagedBlockchain(this, 'Crow Blockchain', {
       username: 'MyAdminUser',
       password: 'Password123',
-      networkMemberName: 'Crow Member',
-      networkId: 'Zero'
+      networkMemberName: 'Crow Member'
     });
   }
 

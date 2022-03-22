@@ -6,8 +6,7 @@ import { Construct } from 'constructs';
 export interface ChainProps {
     username: string,
     password: string,
-    networkMemberName?: string,
-    networkId?: string
+    networkMemberName?: string
 }
 
 export class CrowManagedBlockchain extends Construct {
