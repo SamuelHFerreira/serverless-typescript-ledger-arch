@@ -6,6 +6,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { OpenAPIV3 } from 'openapi-types';
 import * as YAML from 'yaml';
 import * as fs from 'fs';
+import { CrowManagedBlockchain } from './crow-managed-blockchain';
+import { FileSystemSetup } from './file-system-setup';
 
 export type IntegrationAddons = {
   [xHeaderId: string]: IntegrationAddon & unknown;
@@ -47,19 +49,25 @@ export class MastersOfMultiverseStack extends Stack {
     const openApiYaml = fs.readFileSync('specs/Masters-Of-Multiverse.yaml', 'utf-8');
     this.openApiSpec = YAML.parse(openApiYaml);
 
+    const fileSystemSetup = new FileSystemSetup(this, "lambdaExtraFiles", {});
+
     const getUserHandler: lambda.Function = new lambda.Function(this, 'GetUserLambdaHandler', {
+      filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset(sourceDir),
       handler: 'operations/getUser.handler',
       timeout: Duration.seconds(10),
+      vpc: fileSystemSetup.vpc,
     });
     getUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
     const createUserHandler: lambda.Function = new lambda.Function(this, 'CreateUserLambdaHandler', {
+      filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset(sourceDir),
       handler: 'operations/postUser.handler',
       timeout: Duration.seconds(10),
+      vpc: fileSystemSetup.vpc,
     });
     createUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
@@ -77,6 +85,14 @@ export class MastersOfMultiverseStack extends Stack {
     };
 
     const api = new apigateway.SpecRestApi(this, 'MastersOfMultiverseAPI', specRestApiProps);
+
+    // TODO, add KMS for password.
+    const crowBlockChain = new CrowManagedBlockchain(this, 'Crow Blockchain', {
+      username: 'MyAdminUser',
+      password: 'Password123',
+      networkMemberName: 'Crow Member',
+      networkId: 'Zero'
+    });
   }
 
   private customizeSpecToLambdaHandling(lambda: lambda.Function, pathToApply: string, methodToApply: string) {
@@ -100,7 +116,7 @@ export class MastersOfMultiverseStack extends Stack {
       .filter((method) => (<any>Object).values(OpenAPIV3.HttpMethods).includes(method) && method == operationToApply)
       .map((method) => {
         let operation = pathSpec[method] as { [attr: string]: unknown };
-        this.addIntegrationToOperation( operation, lambdaIntegrationUri);
+        this.addIntegrationToOperation(operation, lambdaIntegrationUri);
       });
   }
 

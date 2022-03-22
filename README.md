@@ -1,8 +1,11 @@
-# Welcome to your CDK TypeScript project
+# Welcome to my Serverless Typescript Ledger Architecture project
 
-This is a blank project for TypeScript development with CDK.
+The main goal of this project is to have a working back end entirely wrriten in serverless architecture with typescript lambdas using the managed block chain of AWS to power the features to use at the lambda rules.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Spec Details
+
+Supported Hyperledger Fabric version: 2.2
+CDK Version: 2.17
 
 ## Useful commands
 
