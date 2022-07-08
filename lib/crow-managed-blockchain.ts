@@ -15,13 +15,10 @@ export class CrowManagedBlockchain extends Construct {
         super(scope, id);
         const memberConfiguration: CfnMemberProps = {
             memberConfiguration: this.getMemberConfig(props),
-            networkConfiguration: this.getNetworkConfig(),
-            networkId: props.networkId
+            networkConfiguration: this.getNetworkConfig()
         }
-        
         const bc = new mbc.CfnMember(this, 'Crow Member', memberConfiguration);
     }   
-
 
     private getNetworkConfig() {
         const fabricNetworkConfig: mbc.CfnMember.NetworkFabricConfigurationProperty = {
@@ -44,12 +41,13 @@ export class CrowManagedBlockchain extends Construct {
 
         const networkConfig: mbc.CfnMember.NetworkConfigurationProperty = {
             name: 'CrowBlockChain',
-            description: 'Generated newtork.',
+            description: 'Generated Newtork.',
             framework: 'HYPERLEDGER_FABRIC',
             frameworkVersion: '2.2',
             networkFrameworkConfiguration: netFrameworkConfig,
             votingPolicy: votingPolicyConfig
         };
+
         return networkConfig;
     }
 

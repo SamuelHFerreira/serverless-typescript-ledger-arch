@@ -49,25 +49,25 @@ export class MastersOfMultiverseStack extends Stack {
     const openApiYaml = fs.readFileSync('specs/Masters-Of-Multiverse.yaml', 'utf-8');
     this.openApiSpec = YAML.parse(openApiYaml);
 
-    const fileSystemSetup = new FileSystemSetup(this, "lambdaExtraFiles", {});
+    // const fileSystemSetup = new FileSystemSetup(this, "lambdaExtraFiles", {});
 
     const getUserHandler: lambda.Function = new lambda.Function(this, 'GetUserLambdaHandler', {
-      filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
+      // filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset(sourceDir),
       handler: 'operations/getUser.handler',
       timeout: Duration.seconds(10),
-      vpc: fileSystemSetup.vpc,
+      // vpc: fileSystemSetup.vpc,
     });
     getUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
     const createUserHandler: lambda.Function = new lambda.Function(this, 'CreateUserLambdaHandler', {
-      filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
+      // filesystem: lambda.FileSystem.fromEfsAccessPoint(fileSystemSetup.accessPoint, '/mnt/files'),
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset(sourceDir),
       handler: 'operations/postUser.handler',
       timeout: Duration.seconds(10),
-      vpc: fileSystemSetup.vpc,
+      // vpc: fileSystemSetup.vpc,
     });
     createUserHandler.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 

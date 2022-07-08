@@ -18,7 +18,12 @@ export class FileSystemSetup extends Construct {
     super(scope, id);
     this.filesPath = props.filesPath ?? '/export/lambda';
 
-    this.vpc = new ec2.Vpc(this, 'VPC');
+    const vpcProps:ec2.VpcProps = {
+      maxAzs: 1,
+      natGateways: 1
+    }
+
+    this.vpc = new ec2.Vpc(this, 'VPC', vpcProps);
 
     const fileSystem = new efs.FileSystem(this, 'Efs', { vpc: this.vpc });
 
